@@ -9,6 +9,8 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 /**
@@ -19,8 +21,7 @@ import java.util.regex.Pattern;
 public class Utilidades {
 
     public static final String isNumber = "N";
-    public static final String isSpace = "S";
-    public static final String isHex = "H";
+    public static final String isOper = "O";
     public static final String dirOut = "../out/";
     public static final String EXT_JAVA = ".java";
     /**
@@ -46,7 +47,7 @@ public class Utilidades {
     /**
      * Array de Operadores aceptados
      */
-    public static final String patternOpers[] = {"+", "/", "-", "*"};
+    public static final String patternOpers = "[+|-|/|*]";
     /**
      * No es una palabra
      */
@@ -74,7 +75,7 @@ public class Utilidades {
             System.out.println("-- number int");
         } else if (Pattern.matches(patternHex, value)) {
             System.out.println("-- hex");
-        } else if (evaluarOper(value)) {
+        } else if (Pattern.matches(patternOpers,value)) {
             System.out.println("-- oper");
         } else if (Pattern.matches(patternUpper, value)) { // desde aqui algo va mal
             throw new MalFormatExp("ERROR LEXICO: Tiene caracteres en mayuscula.");
@@ -83,24 +84,8 @@ public class Utilidades {
         } else if (Pattern.matches(patternNotHex, value)) {
             throw new MalFormatExp("ERROR LEXICO: Tiene caracteres que no son hexadecimales.");
         } else if (Pattern.matches(patterSomeSymbol, value)) {
-            throw new MalFormatExp("ERROR LEXICO: Contiene simbolo no reconocido.");
+            throw new MalFormatExp("ERROR LEXICO: Contiene simbolo(s) no reconocido(s).");
         }
-    }
-
-    /**
-     * Metodo para evaluar si el operador es valido
-     *
-     * @param value
-     * @return
-     */
-    public static boolean evaluarOper(String value) {
-        boolean b = false;
-        for (String patternOper : patternOpers) {
-            if (patternOper.equals(value)) {
-                b = true;
-            }
-        }
-        return b;
     }
 
     /**
@@ -158,16 +143,17 @@ public class Utilidades {
         try {
             d = Integer.decode(r);
         } catch (Exception e) {
-            throw new MalFormatExp("Error no reconocido : \n", e);            
+            throw new MalFormatExp("Error no reconocido : \n", e);
         }
         return d;
     }
 
     /**
      * creacion de archivos
+     *
      * @param tmpValue
      * @param content
-     * @return 
+     * @return
      */
     public static boolean createFile(String tmpValue, byte[] content) {
         boolean r = false;
@@ -175,17 +161,18 @@ public class Utilidades {
         try {
             r = writeByteArraysToFile(file.getAbsolutePath(), content);
         } catch (IOException e) {
-           LoggerUtil.getInstance().showErrorMessage(e.getMessage(), Utilidades.class.getName());
+            LoggerUtil.getInstance().showErrorMessage(e.getMessage(), Utilidades.class.getName());
         }
         return r;
     }
 
     /**
      * metodo para escribir el archivo
+     *
      * @param fileName
      * @param content
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     public static boolean writeByteArraysToFile(String fileName, byte[] content)
             throws IOException {
@@ -205,4 +192,65 @@ public class Utilidades {
         return file.exists();
 
     }
+
+    /**
+     * metodo para ayudar a la organizacion de las pilas de operandos y operadores
+     * @param value
+     * @return
+     */
+    public static int getTypeToken(String value) {
+        int get = 0;
+        if (Pattern.matches(patternNumberDec, value) || Pattern.matches(patternNumberInt, value) || Pattern.matches(patternHex, value)) {
+            get = 1; 
+        } else {
+            get = 2; 
+        }
+        return get;
+    }
+
+    /**
+     * metodo para organizar los elementos de postfijo a infijo
+     * @param post 
+     * @return  cadena organizada de los elementos en notacion infija
+     */
+    public static String organizarInfija(String post) {
+
+        String infix = "";
+        String str = "";
+        int size = 0;
+        Stack< String> p = new Stack< String>();
+        Stack< String> n = new Stack< String>();
+        StringTokenizer token = new StringTokenizer(post);
+
+        while (token.hasMoreTokens()) {
+            str = token.nextToken();
+            switch (getTypeToken(str)) {
+                case 1:
+                    n.push(str);// cola para los numeros
+                    break;
+                case 2:
+                    p.push(str);// cola para los operadores
+                    if(n.size()>1 && infix.isEmpty()){// esta inicializando la organizacion
+                        size = n.size();
+                        infix = n.get(size-1) + p.lastElement() + n.get(size-2);
+                        n.remove(size-1);// remover elemento extraido 1
+                        n.remove(size-2);// remover elemento extraido 2
+                        p.remove(p.size()-1);// remover operador utilizado
+                        System.out.println("asi vamos 1:  "+infix);
+                    }else if(n.size() >= 1){
+                        size = n.size();// remover elemento extraido 1
+                        infix = "("+infix+")"+p.lastElement()+n.lastElement();
+                        n.remove(size-1);
+                        p.remove(p.size()-1);// remover operador utilizado
+                        System.out.println("asi vamos 2:  "+infix);
+                    }
+                    break;
+            }
+        }
+        
+        return infix;
+    }
+    
+    // TODO evaluar si aun existen operandos con conteo mayor a los ya finalizados para formar la expresion o al contrario
+    
 }
