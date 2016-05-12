@@ -234,7 +234,8 @@ public class Utilidades {
      */
     public static int getTypeToken(String value) {
         int get = 0;
-        if (Pattern.matches(patternNumberDec, value) || Pattern.matches(patternNumberInt, value) || Pattern.matches(patternHex, value)) {
+        if (Pattern.matches(patternNumberDec, value) || Pattern.matches(patternNumberInt, value) 
+                || Pattern.matches(patternHex, value) || Pattern.matches(patternNumberOct, value)) {
             get = 1;
         } else {
             get = 2;
