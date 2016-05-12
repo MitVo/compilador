@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
@@ -19,6 +21,10 @@ import java.util.regex.Pattern;
  * @date 11-may-2016
  */
 public class Utilidades {
+
+    private Stack< String> p = new Stack< String>();
+    private Stack< String> n = new Stack< String>();
+    private String str = null;
 
     public static final String isNumber = "N";
     public static final String isOper = "O";
@@ -33,13 +39,21 @@ public class Utilidades {
      */
     public static final String patternNotHex = "[\\p{Alnum}\\p{Punct}]*[G-Zg-z]+[\\p{Alnum}\\p{Punct}]*";
     /**
+     * Expresion regular para caracteres con falta de identificadores para hexadecimales
+     */
+    public static final String patternBadHex = "-*0*[x|X]*[0-9a-f]+[0-9a-f|a-f0-9]*";
+    /**
      * Expresion regular para numeros hexadecimales negativos y positivos
      */
-    public static final String patternHex = "-*0[x|X][0-9a-f]+[0-9]*";
+    public static final String patternHex = "-*0[x|X][0-9a-f]+[0-9a-f|a-f0-9]*";
     /**
      * Expresion regular para numeros decimales
      */
     public static final String patternNumberDec = "-*[0-9]+[,0-9]*";
+    /**
+     * Expresion regular para numeros octales
+     */
+    public static final String patternNumberOct = "-*[0][1-7]+";
     /**
      * Expresion regular para numeros enteros
      */
@@ -57,52 +71,46 @@ public class Utilidades {
      */
     public static final String patterSomeSymbol = "[\\p{Alnum}\\p{Punct}]*[\\p{Punct}]+[\\p{Alnum}\\p{Punct}]*";
 
-    /**
-     * Es un spacio en blanco
-     */
-    //public static final String patternWhiteSpace = "[ \\t\\n\\x0B\\f\\r]";    
+    public static Utilidades getInstance() {
+        return new Utilidades();
+    }
+
     /**
      * metodo para la evaluacion del lexico
      *
      * @param value
      * @throws com.utilidad.MalFormatExp
      */
-    public static void evaluarLexico(String value) throws MalFormatExp {
+    public void evaluarLexico(String value) throws MalFormatExp {
 
-        if (Pattern.matches(patternNumberDec, value)) {
-            System.out.println("-- number dec");
-        } else if (Pattern.matches(patternNumberInt, value)) {
-            System.out.println("-- number int");
-        } else if (Pattern.matches(patternHex, value)) {
-            System.out.println("-- hex");
-        } else if (Pattern.matches(patternOpers,value)) {
-            System.out.println("-- oper");
-        } else if (Pattern.matches(patternUpper, value)) { // desde aqui algo va mal
-            throw new MalFormatExp("ERROR LEXICO: Tiene caracteres en mayuscula.");
-        } else if (Pattern.matches(patternWord, value)) {
-            throw new MalFormatExp("ERROR LEXICO: Es una palabra.");
-        } else if (Pattern.matches(patternNotHex, value)) {
-            throw new MalFormatExp("ERROR LEXICO: Tiene caracteres que no son hexadecimales.");
-        } else if (Pattern.matches(patterSomeSymbol, value)) {
-            throw new MalFormatExp("ERROR LEXICO: Contiene simbolo(s) no reconocido(s).");
+        StringTokenizer token = new StringTokenizer(value);
+        int pos = 0;
+        while (token.hasMoreTokens()) {
+            str = token.nextToken();
+            pos += 1;
+            if (Pattern.matches(patternNumberDec, str)) {
+                LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+            } else if (Pattern.matches(patternNumberInt, str)) {
+                LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+            } else if (Pattern.matches(patternNumberOct, str)){
+                LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+            } else if (Pattern.matches(patternHex, str)) {
+                LoggerUtil.getInstance().showLogMessage("-- hexadecimal encontrado", Utilidades.class.getName());
+            } else if (Pattern.matches(patternOpers, str)) {
+                LoggerUtil.getInstance().showLogMessage("-- operador encontrado", Utilidades.class.getName());
+            } else if (Pattern.matches(patternUpper, str)) { // desde aqui algo va mal
+                throw new MalFormatExp("ERROR LEXICO: El objeto de posición "+pos+" tiene caracteres en mayuscula.");
+            } else if (Pattern.matches(patternWord, str)) {
+                throw new MalFormatExp("ERROR LEXICO: El objeto de posición "+pos+" es una palabra.");
+            } else if (Pattern.matches(patternNotHex, str)) {
+                throw new MalFormatExp("ERROR LEXICO: El objeto de posición "+pos+" tiene caracteres que no son hexadecimales.");
+            } else if (Pattern.matches(patternBadHex, str)) {
+                throw new MalFormatExp("ERROR LEXICO: El objeto de posición "+pos+" no tiene suficientes caracteres para ser hexadecimal.");
+            } else if (Pattern.matches(patterSomeSymbol, str)) {
+                throw new MalFormatExp("ERROR LEXICO: Contiene simbolo(s) no reconocido(s).");
+            }
         }
-    }
 
-    /**
-     * Metodo para conocer jerarquia de operadores
-     *
-     * @param op
-     * @return
-     */
-    private static int operJerarq(String op) {
-        int prf = 0;
-        if (op.equals("*") || op.equals("/")) {
-            prf = 2;
-        }
-        if (op.equals("+") || op.equals("-")) {
-            prf = 1;
-        }
-        return prf;
     }
 
     /**
@@ -116,7 +124,7 @@ public class Utilidades {
         try {
             d = Double.valueOf(r);
         } catch (Exception e) {
-            throw new MalFormatExp("Error no reconocido : \n", e);
+            throw new MalFormatExp("Error no reconocido en conversión a decimal : \n", e);
         }
         return d;
     }
@@ -133,6 +141,30 @@ public class Utilidades {
     }
 
     /**
+     *
+     * @param value
+     * @return
+     */
+    private double getTypeNumber(String value) {
+        double d = 0;
+        if (Pattern.matches(patternNumberDec, value)) {
+            try {
+                d = getDouble(value);
+            } catch (MalFormatExp ex) {
+                Logger.getLogger(Utilidades.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            try {
+                d = getInteger(value);
+            } catch (MalFormatExp ex) {
+                Logger.getLogger(Utilidades.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return d;
+    }
+
+    /**
      * Metodo para obtener entero
      *
      * @param r
@@ -143,7 +175,7 @@ public class Utilidades {
         try {
             d = Integer.decode(r);
         } catch (Exception e) {
-            throw new MalFormatExp("Error no reconocido : \n", e);
+            throw new MalFormatExp("Error no reconocido en conversión a entero : \n", e);
         }
         return d;
     }
@@ -155,7 +187,7 @@ public class Utilidades {
      * @param content
      * @return
      */
-    public static boolean createFile(String tmpValue, byte[] content) {
+    public boolean createFile(String tmpValue, byte[] content) {
         boolean r = false;
         File file = new File(tmpValue);
         try {
@@ -194,32 +226,38 @@ public class Utilidades {
     }
 
     /**
-     * metodo para ayudar a la organizacion de las pilas de operandos y operadores
+     * metodo para ayudar a la organizacion de las pilas de operandos y
+     * operadores
+     *
      * @param value
      * @return
      */
     public static int getTypeToken(String value) {
         int get = 0;
         if (Pattern.matches(patternNumberDec, value) || Pattern.matches(patternNumberInt, value) || Pattern.matches(patternHex, value)) {
-            get = 1; 
+            get = 1;
         } else {
-            get = 2; 
+            get = 2;
         }
         return get;
     }
 
     /**
      * metodo para organizar los elementos de postfijo a infijo
-     * @param post 
-     * @return  cadena organizada de los elementos en notacion infija
+     *
+     * @param post notacion infija
+     * @param p pila que contiene los registros operandos
+     * @param n pila que contiene los registros operadores
+     * @return cadena organizada de los elementos en notacion infija
      */
-    public static String organizarInfija(String post) {
+    public String organizarInfija(String post, Stack< String> p, Stack< String> n) {
 
         String infix = "";
-        String str = "";
+        double dtmp1 = 0, dtmp2 = 0;
+        str = "";
         int size = 0;
-        Stack< String> p = new Stack< String>();
-        Stack< String> n = new Stack< String>();
+        String tmp1 = "", tmp2 = "";
+
         StringTokenizer token = new StringTokenizer(post);
 
         while (token.hasMoreTokens()) {
@@ -230,27 +268,97 @@ public class Utilidades {
                     break;
                 case 2:
                     p.push(str);// cola para los operadores
-                    if(n.size()>1 && infix.isEmpty()){// esta inicializando la organizacion
+                    if (n.size() > 1 && infix.isEmpty()) {// esta inicializando la organizacion
                         size = n.size();
-                        infix = n.get(size-1) + p.lastElement() + n.get(size-2);
-                        n.remove(size-1);// remover elemento extraido 1
-                        n.remove(size-2);// remover elemento extraido 2
-                        p.remove(p.size()-1);// remover operador utilizado
-                        System.out.println("asi vamos 1:  "+infix);
-                    }else if(n.size() >= 1){
+                        dtmp1 = getTypeNumber(n.get(size - 1));
+                        dtmp2 = getTypeNumber(n.get(size - 2));
+                        if (dtmp1 < 0) {
+                            tmp1 = "(" + dtmp1 + ")";
+                        } else {
+                            tmp1 = String.valueOf(dtmp1);
+                        }
+
+                        if (dtmp2 < 0) {
+                            tmp2 = "(" + dtmp2 + ")";
+                        } else {
+                            tmp2 = String.valueOf(dtmp2);
+                        }
+
+                        infix = tmp1 + p.lastElement() + tmp2;
+                        n.remove(size - 1);// remover elemento extraido 1
+                        n.remove(size - 2);// remover elemento extraido 2
+                        p.remove(p.size() - 1);// remover operador utilizado
+                    } else if (n.size() >= 1) {
                         size = n.size();// remover elemento extraido 1
-                        infix = "("+infix+")"+p.lastElement()+n.lastElement();
-                        n.remove(size-1);
-                        p.remove(p.size()-1);// remover operador utilizado
-                        System.out.println("asi vamos 2:  "+infix);
+                        dtmp1 = getTypeNumber(n.lastElement());
+                        if (dtmp1 < 0) {
+                            tmp1 = "(" + dtmp1 + ")";
+                        } else {
+                            tmp1 = String.valueOf(dtmp1);
+                        }
+
+                        infix = "(" + infix + ")" + p.lastElement() + tmp1;
+                        n.remove(size - 1);
+                        p.remove(p.size() - 1);// remover operador utilizado
                     }
                     break;
             }
+
+            tmp1 = "";
+            tmp2 = "";
+            dtmp1 = 0;
+            dtmp2 = 0;
+
         }
-        
+
         return infix;
     }
-    
+
     // TODO evaluar si aun existen operandos con conteo mayor a los ya finalizados para formar la expresion o al contrario
-    
+    /**
+     * metodo para evaluacion de la logica de la expresion ingresa segun el
+     * numero de identificadores y operadores
+     *
+     * @param cadena
+     * @throws MalFormatExp
+     */
+    public void evaluarSintactico(String cadena) throws MalFormatExp {
+
+        StringTokenizer token = new StringTokenizer(cadena);
+        str = "";
+        n.clear();
+        p.clear();
+        while (token.hasMoreTokens()) {
+            str = token.nextToken();
+            switch (getTypeToken(str)) {
+                case 1:
+                    n.push(str);// cola para los numeros
+                    break;
+                case 2:
+                    p.push(str);// cola para los operadores
+                    break;
+            }
+        }
+
+        // evaluar numero de operadores y operandos
+        if (n.size() - 1 != p.size()) {
+            if (n.size() > p.size()) {
+                throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERANDOS para procesar. "
+                        + "Por favor verificar.");
+            } else {
+                throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERANDORES para procesar. "
+                        + "Por favor verificar.");
+            }
+
+        }
+    }
+
+    public Stack<String> getP() {
+        return p;
+    }
+
+    public Stack<String> getN() {
+        return n;
+    }
+
 }
