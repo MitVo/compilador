@@ -61,7 +61,7 @@ public class Utilidades {
     /**
      * Array de Operadores aceptados
      */
-    public static final String patternOpers = "[+|-|/|*]";
+    public static final String patternOpers = "[+|/|*|-]";
     /**
      * No es una palabra
      */
@@ -251,28 +251,30 @@ public class Utilidades {
      * @param n pila que contiene los registros operadores
      * @return cadena organizada de los elementos en notacion infija
      */
-    public String organizarInfija(String post, Stack< String> p, Stack< String> n) {
+    public String organizarInfija(String post) {
 
-        String infix = "";
+        String infix = "", infix_tmp = "";
         double dtmp1 = 0, dtmp2 = 0;
         str = "";
         int size = 0;
         String tmp1 = "", tmp2 = "";
+        Stack< String> pt =  new Stack< String>(); 
+        Stack< String> nt =  new Stack< String>();
 
         StringTokenizer token = new StringTokenizer(post);
 
         while (token.hasMoreTokens()) {
             str = token.nextToken();
-            switch (getTypeToken(str)) {
+            switch (getTypeToken(str)) {                
                 case 1:
-                    n.push(str);// cola para los numeros
+                    nt.push(str);// cola para los numeros
                     break;
                 case 2:
-                    p.push(str);// cola para los operadores
-                    if (n.size() > 1 && infix.isEmpty()) {// esta inicializando la organizacion
-                        size = n.size();
-                        dtmp1 = getTypeNumber(n.get(size - 1));
-                        dtmp2 = getTypeNumber(n.get(size - 2));
+                    pt.push(str);// cola para los operadores                   
+                    if (nt.size()>= 2 && infix.isEmpty()) {// esta inicializando la organizacion
+                        size = nt.size();
+                        dtmp1 = getTypeNumber(nt.get(size - 1));
+                        dtmp2 = getTypeNumber(nt.get(size - 2));
                         if (dtmp1 < 0) {
                             tmp1 = "(" + dtmp1 + ")";
                         } else {
@@ -285,22 +287,46 @@ public class Utilidades {
                             tmp2 = String.valueOf(dtmp2);
                         }
 
-                        infix = tmp1 + p.lastElement() + tmp2;
-                        n.remove(size - 1);// remover elemento extraido 1
-                        n.remove(size - 2);// remover elemento extraido 2
-                        p.remove(p.size() - 1);// remover operador utilizado
-                    } else if (n.size() >= 1) {
-                        size = n.size();// remover elemento extraido 1
-                        dtmp1 = getTypeNumber(n.lastElement());
-                        if (dtmp1 < 0) {
+                        infix = tmp2 + pt.lastElement() + tmp1;
+                        nt.remove(size - 1);// remover elemento extraido 1
+                        nt.remove(size - 2);// remover elemento extraido 2
+                        pt.remove(pt.size() - 1);// remover operador utilizado
+                    } else if (nt.size()== 1 && !infix.isEmpty()) { 
+                        size = nt.size();// remover elemento extraido 1
+                        dtmp1 = getTypeNumber(nt.lastElement());
+                        if (dtmp1 < 0) { // numeros negativos
                             tmp1 = "(" + dtmp1 + ")";
                         } else {
                             tmp1 = String.valueOf(dtmp1);
                         }
 
-                        infix = "(" + infix + ")" + p.lastElement() + tmp1;
-                        n.remove(size - 1);
-                        p.remove(p.size() - 1);// remover operador utilizado
+                        infix = "(" + infix + ")" + pt.lastElement() + tmp1; // (expresion) operador numero
+                        nt.remove(size - 1);
+                        pt.remove(pt.size() - 1);// remover operador utilizado
+                    }else if (nt.size()>= 2 && !infix.isEmpty()) {
+                        size = nt.size();
+                        dtmp1 = getTypeNumber(nt.get(size - 1));
+                        dtmp2 = getTypeNumber(nt.get(size - 2));
+                        if (dtmp1 < 0) {
+                            tmp1 = "(" + dtmp1 + ")";
+                        } else {
+                            tmp1 = String.valueOf(dtmp1);
+                        }
+                        
+                        if (dtmp2 < 0) {
+                            tmp2 = "(" + dtmp2 + ")";
+                        } else {
+                            tmp2 = String.valueOf(dtmp2);
+                        }
+                        
+                        infix_tmp = "("+ tmp2 + pt.lastElement() + tmp1 + ")";
+                        pt.remove(pt.size()-1);
+                        nt.remove(size - 1);
+                        nt.remove(size - 2);
+                    }else if(nt.size()==0 && !infix_tmp.isEmpty()){
+                        infix = "("+infix+")"+pt.lastElement()+infix_tmp;
+                        pt.remove(pt.size()-1);
+                        infix_tmp = "";
                     }
                     break;
             }

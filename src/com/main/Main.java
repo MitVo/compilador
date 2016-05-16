@@ -39,8 +39,9 @@ public class Main {
             ut.evaluarSintactico(expr);
             // organizacion de expresion a infija
             LoggerUtil.getInstance().showLogMessage("-- organizando expresión de postfija a infija ... ", Main.class.getName());
-            infix = Utilidades.getInstance().organizarInfija(expr, ut.getP(), ut.getN());            
-            // todo salio bien .. a generar el archivo
+            infix = Utilidades.getInstance().organizarInfija(expr);    
+            LoggerUtil.getInstance().showLogMessage("  "+infix, Main.class.getName());
+            // todo salio bien .. a generar el archivo            
             if(ut.createFile(Utilidades.dirOut+FileContent.FILE_NAME, FileContent.generarArchivoJava(infix).getBytes())){
                System.out.println("*La generación del archivo ha sido exitoso, puede verificar en carpeta out."); 
             }else{
