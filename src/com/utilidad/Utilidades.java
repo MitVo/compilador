@@ -291,6 +291,17 @@ public class Utilidades {
                         infix = tmp2 + pt.lastElement() + tmp1;
                         nt.remove(size - 1);// remover elemento extraido 1
                         nt.remove(size - 2);// remover elemento extraido 2
+                        /**
+                         * PRN : 5 1 2 + 4 * + 3 -
+                         * La pila nt[2] = 5
+                         * Size = 3
+                         * Se alamcena temporalmente el valor para concatenarlo
+                         * a la notación infija cuando no encuentre más operando y halle un operador
+                         */
+                        if(!nt.isEmpty()){
+                            infix_tmp = String.valueOf(getTypeNumber(nt.get(0)));
+                            nt.remove(0);
+                        }
                         pt.remove(pt.size() - 1);// remover operador utilizado
                     } else if (nt.size()== 1 && !infix.isEmpty()) { 
                         size = nt.size();// remover elemento extraido 1
@@ -320,7 +331,8 @@ public class Utilidades {
                             tmp2 = String.valueOf(dtmp2);
                         }
                         
-                        infix_tmp = "("+ tmp2 + pt.lastElement() + tmp1 + ")";
+                       // infix_tmp = "("+ tmp2 + pt.lastElement() + tmp1 + ")";
+                        infix =  infix + "("+ tmp2 + pt.lastElement() + tmp1 + ")";
                         pt.remove(pt.size()-1);
                         nt.remove(size - 1);
                         nt.remove(size - 2);
@@ -335,20 +347,11 @@ public class Utilidades {
                      * Concatena la notación infija con el Operador encontrado
                      */
                     else if(nt.size()==0 && !infix.isEmpty()){ // caso 1 2 + 3 - 4 - * 5 6 -
-                        infix = "("+infix+")"+pt.lastElement()+infix_tmp;
+                        infix = "("+infix+")"+ pt.lastElement()+infix_tmp;
                         pt.remove(pt.size()-1);
                         infix_tmp = "";
                     }
                     break;
-            }
-            /**
-             * caso 1 2 + 3 - 4 - * 5 6 -
-             * Resultado: (((1.0+2.0)-3.0)-4.0)*(5.0-6.0)
-             * Concatena la notación infija restante al terminar el token
-             */
-            if(!infix_tmp.isEmpty()){ // caso 1 2 + 3 - 4 - * 5 6 -
-                infix = infix + infix_tmp;
-                infix_tmp = "";
             }
             tmp1 = "";
             tmp2 = "";
