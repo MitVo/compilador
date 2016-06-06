@@ -35,6 +35,9 @@ public class Main {
             LoggerUtil.getInstance().showLogMessage("-- realizando verificación de cadena ingresada ... ", Main.class.getName());
             ut.evaluarLexico(expr);
             
+            //Pasar valores Hexadecimales a Decimales
+            expr = ut.valoresHexadecimales(expr);
+            
             // evaluacion sintactica
             LoggerUtil.getInstance().showLogMessage("-- realizando verificación sintactica ... ", Main.class.getName());
             ut.evaluarSintactico(expr);

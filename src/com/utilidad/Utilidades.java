@@ -86,19 +86,27 @@ public class Utilidades {
 
         StringTokenizer token = new StringTokenizer(value);
         int pos = 0;
+        int numerosCount = 0;
+        int operadoresCount = 0;
+        
         while (token.hasMoreTokens()) {
             str = token.nextToken();
             pos += 1;
             if (Pattern.matches(patternNumberDec, str)) {
                 LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+                numerosCount += 1;
             } else if (Pattern.matches(patternNumberInt, str)) {
                 LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+                numerosCount += 1;
             } else if (Pattern.matches(patternNumberOct, str)){
                 LoggerUtil.getInstance().showLogMessage("-- número encontrado", Utilidades.class.getName());
+                numerosCount += 1;
             } else if (Pattern.matches(patternHex, str)) {
                 LoggerUtil.getInstance().showLogMessage("-- hexadecimal encontrado", Utilidades.class.getName());
+                numerosCount += 1;
             } else if (Pattern.matches(patternOpers, str)) {
                 LoggerUtil.getInstance().showLogMessage("-- operador encontrado", Utilidades.class.getName());
+                operadoresCount += 1;
             } else if (Pattern.matches(patternUpper, str)) { // desde aqui algo va mal
                 throw new MalFormatExp("ERROR LEXICO: El objeto de posición "+pos+" tiene caracteres en mayuscula.");
             } else if (Pattern.matches(patternWord, str)) {
@@ -111,8 +119,40 @@ public class Utilidades {
                 throw new MalFormatExp("ERROR LEXICO: Contiene simbolo(s) no reconocido(s).");
             }
         }
-
+        
+         validarNumerosOperadores(numerosCount, operadoresCount);
     }
+    
+    private void validarNumerosOperadores(int numerosCount, int operadoresCount) throws MalFormatExp{
+        if(numerosCount > 1){
+            if(operadoresCount  > 0){
+                if((numerosCount -1) != operadoresCount){
+                    if(((numerosCount / operadoresCount) % 2) != 0){
+                        throw new MalFormatExp("ERROR LEXICO: La cantidad de OPERANDOS no es válido para procesar. Por favor verificar.");
+                    } 
+                }
+            }else{
+                throw new MalFormatExp("ERROR LEXICO: No se encontraron suficientes OPERANDOS para procesar. Por favor verificar.");
+            }
+        }else{
+            throw new MalFormatExp("ERROR LEXICO: No se encontraron suficientes NÚMEROS para procesar. Por favor verificar.");
+        }
+    }
+    
+    public  String valoresHexadecimales(String exp)throws MalFormatExp{
+
+        String strExp = exp.toUpperCase();
+
+        strExp = strExp.replace("0X", "");
+        strExp = strExp.replace("A", "10");
+        strExp = strExp.replace("B", "11");
+        strExp = strExp.replace("C", "12");
+        strExp = strExp.replace("D", "13");
+        strExp = strExp.replace("E", "14");
+        strExp = strExp.replace("F", "15");
+
+        return strExp;
+    } 
 
     /**
      * Obtener numero decimal
@@ -255,7 +295,7 @@ public class Utilidades {
     public String organizarInfija(String post) throws MalFormatExp {
 
         String infix = "", infix_tmp = "";
-        double dtmp1 = 0, dtmp2 = 0;
+        int dtmp1 = 0, dtmp2 = 0;
         str = "";
         int size = 0;
         String tmp1 = "", tmp2 = "";
@@ -274,8 +314,8 @@ public class Utilidades {
                     pt.push(str);// cola para los operadores                   
                     if (nt.size()>= 2 && infix.isEmpty()) {// esta inicializando la organizacion
                         size = nt.size();
-                        dtmp1 = getTypeNumber(nt.get(size - 1));
-                        dtmp2 = getTypeNumber(nt.get(size - 2));
+                        dtmp1 = (int)getTypeNumber(nt.get(size - 1));
+                        dtmp2 = (int)getTypeNumber(nt.get(size - 2));
                         if (dtmp1 < 0) {
                             tmp1 = "(" + dtmp1 + ")";
                         } else {
@@ -305,7 +345,7 @@ public class Utilidades {
                         pt.remove(pt.size() - 1);// remover operador utilizado
                     } else if (nt.size()== 1 && !infix.isEmpty()) { 
                         size = nt.size();// remover elemento extraido 1
-                        dtmp1 = getTypeNumber(nt.lastElement());
+                        dtmp1 = (int)getTypeNumber(nt.lastElement());
                         if (dtmp1 < 0) { // numeros negativos
                             tmp1 = "(" + dtmp1 + ")";
                         } else {
@@ -317,8 +357,8 @@ public class Utilidades {
                         pt.remove(pt.size() - 1);// remover operador utilizado
                     }else if (nt.size()>= 2 && !infix.isEmpty()) {
                         size = nt.size();
-                        dtmp1 = getTypeNumber(nt.get(size - 1));
-                        dtmp2 = getTypeNumber(nt.get(size - 2));
+                        dtmp1 = (int)getTypeNumber(nt.get(size - 1));
+                        dtmp2 = (int)getTypeNumber(nt.get(size - 2));
                         if (dtmp1 < 0) {
                             tmp1 = "(" + dtmp1 + ")";
                         } else {
@@ -399,7 +439,7 @@ public class Utilidades {
                 throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERANDOS para procesar. "
                         + "Por favor verificar.");
             } else {
-                throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERANDORES para procesar. "
+                throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERADORES para procesar. "
                         + "Por favor verificar.");
             }
         }
