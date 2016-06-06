@@ -48,8 +48,9 @@ public class Utilidades {
     public static final String patternHex = "-*0[x|X][0-9a-f]+[0-9a-f|a-f0-9]*";
     /**
      * Expresion regular para numeros decimales
+     * "-*[0-9]+[,0-9]*";
      */
-    public static final String patternNumberDec = "-*[0-9]+[,0-9]*";
+    public static final String patternNumberDec = "^-?[0-9]+([,\\.][0-9]*)?$";
     /**
      * Expresion regular para numeros octales
      */
@@ -147,15 +148,15 @@ public class Utilidades {
      */
     private double getTypeNumber(String value) {
         double d = 0;
-        if (Pattern.matches(patternNumberDec, value)) {
+        if (Pattern.matches(patternNumberInt, value)) {
             try {
-                d = getDouble(value);
+                d = getInteger(value);
             } catch (MalFormatExp ex) {
                 Logger.getLogger(Utilidades.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else {
             try {
-                d = getInteger(value);
+                d = getDouble(value);
             } catch (MalFormatExp ex) {
                 Logger.getLogger(Utilidades.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -251,7 +252,7 @@ public class Utilidades {
      * @param n pila que contiene los registros operadores
      * @return cadena organizada de los elementos en notacion infija
      */
-    public String organizarInfija(String post) {
+    public String organizarInfija(String post) throws MalFormatExp {
 
         String infix = "", infix_tmp = "";
         double dtmp1 = 0, dtmp2 = 0;
@@ -327,10 +328,28 @@ public class Utilidades {
                         infix = "("+infix+")"+pt.lastElement()+infix_tmp;
                         pt.remove(pt.size()-1);
                         infix_tmp = "";
+                    }     
+                    /**
+                     * Notación RPN: 1 2 + 3 - 4 - * 5 6 -
+                     * Resultado Notacion Infija: (((1 + 2) - 3) - 4) * (5 - 6)
+                     * Concatena la notación infija con el Operador encontrado
+                     */
+                    else if(nt.size()==0 && !infix.isEmpty()){ // caso 1 2 + 3 - 4 - * 5 6 -
+                        infix = "("+infix+")"+pt.lastElement()+infix_tmp;
+                        pt.remove(pt.size()-1);
+                        infix_tmp = "";
                     }
                     break;
             }
-
+            /**
+             * caso 1 2 + 3 - 4 - * 5 6 -
+             * Resultado: (((1.0+2.0)-3.0)-4.0)*(5.0-6.0)
+             * Concatena la notación infija restante al terminar el token
+             */
+            if(!infix_tmp.isEmpty()){ // caso 1 2 + 3 - 4 - * 5 6 -
+                infix = infix + infix_tmp;
+                infix_tmp = "";
+            }
             tmp1 = "";
             tmp2 = "";
             dtmp1 = 0;
@@ -363,6 +382,10 @@ public class Utilidades {
                     break;
                 case 2:
                     p.push(str);// cola para los operadores
+                    if(n.size() < 2 && Pattern.matches(patternOpers, p.lastElement())){
+                        throw new MalFormatExp("ERROR SINTACTICO : Faltan elementos de tipo OPERANDOS para procesar. "
+                            + "Por favor verificar.");
+                    }
                     break;
             }
         }
@@ -376,8 +399,8 @@ public class Utilidades {
                 throw new MalFormatExp("ERROR SINTACTICO : Hay demasiados elementos de tipo OPERANDORES para procesar. "
                         + "Por favor verificar.");
             }
-
         }
+        
     }
 
     public Stack<String> getP() {

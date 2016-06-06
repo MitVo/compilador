@@ -24,7 +24,8 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        System.out.println("*Escribe una notación polaca inversa (RPN): ");
+        System.out.println("*Escribe una notación polaca inversa (RPN): \n");
+        System.out.println(":::.Recuerde separar cada caracter con un espacio.::");
         Scanner leer = new Scanner(System.in);
         String expr = leer.nextLine();
         Utilidades ut = new Utilidades();
@@ -51,6 +52,5 @@ public class Main {
         } catch (MalFormatExp ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-
     }
 }
