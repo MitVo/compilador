@@ -294,7 +294,7 @@ public class Utilidades {
      */
     public String organizarInfija(String post) throws MalFormatExp {
 
-        String infix = "", infix_tmp = "";
+        String infix = "", infix_tmp = "", infix_tmp2 = "";
         int dtmp1 = 0, dtmp2 = 0;
         str = "";
         int size = 0;
@@ -339,8 +339,8 @@ public class Utilidades {
                          * a la notación infija cuando no encuentre más operando y halle un operador
                          */
                         if(!nt.isEmpty()){
-                            infix_tmp = String.valueOf(getTypeNumber(nt.get(0)));
-                            nt.remove(0);
+                            infix_tmp = String.valueOf((int)getTypeNumber(nt.lastElement()));
+                            nt.remove(nt.lastElement());
                         }
                         pt.remove(pt.size() - 1);// remover operador utilizado
                     } else if (nt.size()== 1 && !infix.isEmpty()) { 
@@ -371,15 +371,17 @@ public class Utilidades {
                             tmp2 = String.valueOf(dtmp2);
                         }
                         
-                       // infix_tmp = "("+ tmp2 + pt.lastElement() + tmp1 + ")";
-                        infix =  infix + "("+ tmp2 + pt.lastElement() + tmp1 + ")";
+                        if(token.hasMoreTokens())
+                            infix_tmp2 = "("+ tmp2 + pt.lastElement() + tmp1 + ")";
+                        else
+                            infix =  infix + "("+ tmp2 + pt.lastElement() + tmp1 + ")";
                         pt.remove(pt.size()-1);
                         nt.remove(size - 1);
                         nt.remove(size - 2);
-                    }else if(nt.size()==0 && !infix_tmp.isEmpty()){
-                        infix = "("+infix+")"+pt.lastElement()+infix_tmp;
+                    }else if(nt.size()==0 && !infix_tmp2.isEmpty()){
+                        infix = "("+infix+")"+pt.lastElement()+infix_tmp2;
                         pt.remove(pt.size()-1);
-                        infix_tmp = "";
+                        infix_tmp2 = "";
                     }     
                     /**
                      * Notación RPN: 1 2 + 3 - 4 - * 5 6 -
@@ -399,7 +401,8 @@ public class Utilidades {
             dtmp2 = 0;
 
         }
-
+        if(!nt.isEmpty())
+            throw new MalFormatExp("ERROR SEMANTICO : La notación Infija no puede ser operada Insuficientes parametros ["+ infix + "] Por favor verificar.");
         return infix;
     }
 
